@@ -77,11 +77,16 @@ function formatMoney(float $value): string
 for ($i = 1; $i < count($csv); $i++) {
     $row = $csv[$i];
 
-    // Strip slashes and trim each value in the row
+    // Strip slashes, trim, and ensure UTF-8 encoding for each value in the row.
+    // CSV files from Windows applications are commonly saved as Windows-1252; if a value is
+    // not valid UTF-8 it is converted from Windows-1252 (which is a superset of ISO-8859-1).
     array_walk($row, function(&$value, $key) {
         global $bCMS;
         $value = stripslashes($value);
         $value = trim($value);
+        if (!mb_check_encoding($value, 'UTF-8')) {
+            $value = mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+        }
     });
 
     //Check if asset with given tag already exists
@@ -121,15 +126,34 @@ for ($i = 1; $i < count($csv); $i++) {
             $manufacturer['manufacturers_id'] = $DBLIB->insert("manufacturers", $manufacturer);
         }
         
-        //Asset Category
-        $DBLIB->where("assetCategories_name", $row[7]);
-        $DBLIB->where("(assetCategories.instances_id = ? or assetCategories.instances_id IS NULL)", [$instances_id]);
-        $DBLIB->where("assetCategories.assetCategories_deleted", 0);
-        $assetCategory = $DBLIB->getOne("assetCategories", ["assetCategories.assetCategories_id"]);
+        //Asset Category - supports "Group - Category" format to disambiguate duplicate names
+        $categoryInput = $row[7];
+        $assetCategory = null;
+        if (strpos($categoryInput, ' - ') !== false) {
+            // Split on the first occurrence of ' - ' to get group and category names
+            [$groupName, $categoryName] = explode(' - ', $categoryInput, 2);
+            if ($groupName !== '' && $categoryName !== '') {
+                $DBLIB->where("assetCategories_name", $categoryName);
+                $DBLIB->where("(assetCategories.instances_id = ? or assetCategories.instances_id IS NULL)", [$instances_id]);
+                $DBLIB->where("assetCategories.assetCategories_deleted", 0);
+                $DBLIB->join("assetCategoriesGroups", "assetCategoriesGroups.assetCategoriesGroups_id=assetCategories.assetCategoriesGroups_id", "LEFT");
+                $DBLIB->where("assetCategoriesGroups.assetCategoriesGroups_name", $groupName);
+                $DBLIB->where("assetCategoriesGroups.assetCategoriesGroups_deleted", 0);
+                $DBLIB->where("(assetCategoriesGroups.instances_id IS NULL OR assetCategoriesGroups.instances_id = ?)", [$instances_id]);
+                $assetCategory = $DBLIB->getOne("assetCategories", ["assetCategories.assetCategories_id"]);
+            }
+        }
+        if (!$assetCategory) {
+            // Fall back to plain category name lookup (also handles categories whose name contains ' - ')
+            $DBLIB->where("assetCategories_name", $categoryInput);
+            $DBLIB->where("(assetCategories.instances_id = ? or assetCategories.instances_id IS NULL)", [$instances_id]);
+            $DBLIB->where("assetCategories.assetCategories_deleted", 0);
+            $assetCategory = $DBLIB->getOne("assetCategories", ["assetCategories.assetCategories_id"]);
+        }
         if (!$assetCategory) {
             //Asset Category not found
             //This is the one thing we can't just create with data from the CSV
-            array_push($failedAssets, ["row" => $i, "tag" => $row[9], "reason" => "Asset Category with name '". $row[7] . "' not found in this instance"]);
+            array_push($failedAssets, ["row" => $i, "tag" => $row[9], "reason" => "Asset Category '" . $categoryInput . "' not found. If multiple categories share this name, use 'Group - Category' format to disambiguate."]);
             continue;
         }
 
@@ -156,9 +180,17 @@ for ($i = 1; $i < count($csv); $i++) {
             "assetTypes_weekRate" => formatMoney(floatval(sanitizeNumericString($row[5]))),
             "assetTypes_value" => formatMoney(floatval(sanitizeNumericString($row[6]))),
         ];
-        $assetType['assetTypes_id'] = $DBLIB->insert("assetTypes", $assetType);
+        try {
+            $assetType['assetTypes_id'] = $DBLIB->insert("assetTypes", $assetType);
+        } catch (Exception $e) {
+            array_push($failedAssets, ["row" => $i, "tag" => $row[9], "reason" => "Database error creating Asset Type: " . $e->getMessage()]);
+            continue;
+        }
         if ($assetType['assetTypes_id']) array_push($createdAssetTypes, $assetType);
-        else array_push($failedAssets, ["row" => $i, "tag" => $row[9], "reason" => "Error creating Asset Type"]);
+        else {
+            array_push($failedAssets, ["row" => $i, "tag" => $row[9], "reason" => "Error creating Asset Type"]);
+            continue;
+        }
 
     }
 
