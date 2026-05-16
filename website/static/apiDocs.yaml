@@ -1760,6 +1760,24 @@ paths:
                 properties:
                   result: { description: 'Whether the request was successful', type: boolean }
                 type: object
+  /assets/import.php:
+    post:
+      summary: 'Bulk Asset Import'
+      description: 'Bulk import assets, using templated csv'
+      operationId: assetImport
+      parameters:
+        -
+          name: csvFile
+          in: files
+          description: 'CSV File with assets to import'
+          required: 'true'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleResponse'
   /assets/delete.php:
     post:
       tags:
@@ -6342,31 +6360,6 @@ paths:
                 properties:
                   result: { description: 'Whether the request was successful', type: boolean }
                 type: object
-  /server/assetImport.php:
-    post:
-      summary: 'Bulk Asset Import'
-      description: 'Bulk import assets, using templated csv'
-      operationId: assetImport
-      parameters:
-        -
-          name: csvFile
-          in: files
-          description: 'CSV File with assets to import'
-          required: 'true'
-        -
-          name: instances_id
-          in: query
-          description: 'Instance Id to import assets to'
-          required: 'true'
-          schema:
-            type: number
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SimpleResponse'
   /server/users.php:
     post:
       tags:
