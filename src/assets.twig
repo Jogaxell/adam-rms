@@ -269,6 +269,7 @@
                                                                                 <th>{{ field }}</th>
                                                                             {% endfor %}
                                                                             <th>Notes</th>
+                                                                            <th>Current Location</th>
                                                                             <th>Cost/day</th>
                                                                             <th>Cost/week</th>
                                                                             <th style="width:1%"><i class="fas fa-flag"></i></th>
@@ -283,6 +284,21 @@
                                                                                     <td>{{ thisasset['asset_definableFields_' ~ loop.index] }}</td>
                                                                                 {% endfor %}
                                                                                 <td>{{ thisasset['assets_notes']|nl2br }}</td>
+                                                                                <td>
+                                                                                    {% if thisasset.latestScan %}
+                                                                                        {% if thisasset.latestScan.locations_name %}
+                                                                                            {{ thisasset.latestScan.locations_name }}
+                                                                                        {% elseif thisasset.latestScan.assetTypes_name %}
+                                                                                            Inside {{ thisasset.latestScan.assetTypes_name }}
+                                                                                        {% elseif thisasset.latestScan.assetsBarcodes_customLocation %}
+                                                                                            {{ thisasset.latestScan.assetsBarcodes_customLocation }}
+                                                                                        {% else %}
+                                                                                            -
+                                                                                        {% endif %}
+                                                                                    {% else %}
+                                                                                        -
+                                                                                    {% endif %}
+                                                                                </td>
                                                                                 <td>
                                                                                     {{ (thisasset.assets_dayRate ?: asset.assetTypes_dayRate)|money(SEARCH.INSTANCE['instances_config_currency']) }}
                                                                                 </td>
@@ -347,6 +363,7 @@
                                                                                 <th>{{ field }}</th>
                                                                             {% endfor %}
                                                                             <th>Notes</th>
+                                                                            <th>Current Location</th>
                                                                             <th>Cost/day</th>
                                                                             <th>Cost/week</th>
                                                                             <th style="width:1%"><i class="fas fa-flag"></i></th>
@@ -359,6 +376,21 @@
                                                                                     <td>{{ thisasset['asset_definableFields_' ~ loop.index] }}</td>
                                                                                 {% endfor %}
                                                                                 <td>{{ thisasset['assets_notes']|nl2br }}</td>
+                                                                                <td>
+                                                                                    {% if thisasset.latestScan %}
+                                                                                        {% if thisasset.latestScan.locations_name %}
+                                                                                            {{ thisasset.latestScan.locations_name }}
+                                                                                        {% elseif thisasset.latestScan.assetTypes_name %}
+                                                                                            Inside {{ thisasset.latestScan.assetTypes_name }}
+                                                                                        {% elseif thisasset.latestScan.assetsBarcodes_customLocation %}
+                                                                                            {{ thisasset.latestScan.assetsBarcodes_customLocation }}
+                                                                                        {% else %}
+                                                                                            -
+                                                                                        {% endif %}
+                                                                                    {% else %}
+                                                                                        -
+                                                                                    {% endif %}
+                                                                                </td>
                                                                                 <td>
                                                                                     {{ (thisasset.assets_dayRate ?: asset.assetTypes_dayRate)|money(SEARCH.INSTANCE['instances_config_currency']) }}
                                                                                 </td>

@@ -59,6 +59,9 @@ foreach ($assets as $asset) {
     //Files
     $asset['files'] = $bCMS->s3List(4, $asset['assets_id']);
 
+    //Current location from latest barcode scan
+    $asset['latestScan'] = assetLatestScan($asset['assets_id']);
+
     //Storage Location
     $DBLIB->where('locations_id', $asset['assets_storageLocation']);
     $DBLIB->where('instances_id', $AUTH->data['instance']['instances_id']);
@@ -167,7 +170,7 @@ if (count($PAGEDATA['assets']) == 1) {
     } else $PAGEDATA['assets'][0]['locationScans'] = [];
     //Asset Location
     //Current asset location
-    $latestScan = assetLatestScan($asset['assets_id']);
+    $latestScan = assetLatestScan($assets[0]['assets_id']);
 
     if (isset($latestScan['locations_id'])) {
         $PAGEDATA['assets'][0]['assets_latestScanLocationName'] = $latestScan['locations_name'];

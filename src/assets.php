@@ -215,6 +215,7 @@ foreach ($assets as $asset) {
     $asset['thumbnail'] = $bCMS->s3List(2, $asset['assetTypes_id'],'s3files_meta_uploaded','ASC',1);
     $asset['tags'] = [];
     foreach ($assetTags as $tag) {
+        $tag['latestScan'] = assetLatestScan($tag['assets_id']);
         if ($dateStart and $dateEnd) {
             //Check availability
             $DBLIB->where("assets_id", $tag['assets_id']);
