@@ -54,7 +54,7 @@
     {% endfor %}
     </td>
     {% endif %}
-    <td>{{ assetAssignment.assets_notes ? assetAssignment.assets_notes|nl2br : '' }}</td>
+    <td>{{ assetAssignment.storage_location is defined and assetAssignment.storage_location|length > 0 ? assetAssignment.storage_location[0].locations_name : '' }}</td>
     <td>
         {{ (assetAssignment.assetsAssignmentsStatus_name ? assetAssignment.assetsAssignmentsStatus_name ~ "/" : '') }}
         {% if assetAssignment.latestScan %}

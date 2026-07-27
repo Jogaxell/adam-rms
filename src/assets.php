@@ -206,7 +206,7 @@ foreach ($assets as $asset) {
         if ($thisWhere) $DBLIB->where($thisWhere . ")",$thisValues);
     }
     $DBLIB->orderBy("assets.assets_tag", "ASC");
-    $assetTags = $DBLIB->get("assets", null, ["assets_id", "assets_notes", "assets_tag", "asset_definableFields_1", "asset_definableFields_2", "asset_definableFields_3", "asset_definableFields_4", "asset_definableFields_5", "asset_definableFields_6", "asset_definableFields_7", "asset_definableFields_8", "asset_definableFields_9", "asset_definableFields_10", "assets_dayRate", "assets_weekRate", "assets_value", "assets_mass", "assets_endDate"]);
+    $assetTags = $DBLIB->get("assets", null, ["assets_id", "assets_notes", "assets_tag", "asset_definableFields_1", "asset_definableFields_2", "asset_definableFields_3", "asset_definableFields_4", "asset_definableFields_5", "asset_definableFields_6", "asset_definableFields_7", "asset_definableFields_8", "asset_definableFields_9", "asset_definableFields_10", "assets_dayRate", "assets_weekRate", "assets_value", "assets_mass", "assets_endDate", "assets_storageLocation"]);
     if (!$assetTags) continue;
     $asset['count'] = count($assetTags);
     $asset['countBlocked'] = 0;
@@ -215,6 +215,13 @@ foreach ($assets as $asset) {
     $asset['thumbnail'] = $bCMS->s3List(2, $asset['assetTypes_id'],'s3files_meta_uploaded','ASC',1);
     $asset['tags'] = [];
     foreach ($assetTags as $tag) {
+        // Storage Location
+        $DBLIB->where('locations_id', $tag['assets_storageLocation']);
+        $DBLIB->where('instances_id', $SEARCH['INSTANCE_ID']);
+        $DBLIB->where('locations_deleted', 0);
+        $DBLIB->where('locations_archived', 0);
+        $tag['storage_location'] = $DBLIB->get('locations', 1, ['locations_id', 'locations_name']);
+
         $tag['latestScan'] = assetLatestScan($tag['assets_id']);
         if ($dateStart and $dateEnd) {
             //Check availability

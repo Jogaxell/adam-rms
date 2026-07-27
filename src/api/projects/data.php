@@ -132,6 +132,13 @@ function projectFinancials($project) {
 
         $asset['latestScan'] = assetLatestScan($asset['assets_id']);
 
+        // Storage Location
+        $DBLIB->where('locations_id', $asset['assets_storageLocation']);
+        $DBLIB->where('instances_id', $project['instances_id']);
+        $DBLIB->where('locations_deleted', 0);
+        $DBLIB->where('locations_archived', 0);
+        $asset['storage_location'] = $DBLIB->get('locations', 1, ['locations_id', 'locations_name']);
+
         if ($asset['instances_id'] != $project['instances_id']) {
             if (!isset($return['assetsAssignedSUB'][$asset['instances_id']]['assets'])) $return['assetsAssignedSUB'][$asset['instances_id']]['assets'] = [];
             if (!isset($return['assetsAssignedSUB'][$asset['instances_id']]['assets'][$asset['assetTypes_id']])) $return['assetsAssignedSUB'][$asset['instances_id']]['assets'][$asset['assetTypes_id']]['assets'] = [];
